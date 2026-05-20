@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puzzel VA Co-Pilot</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────
+   RESET & DESIGN TOKENS — Puzzel Brand 2024
+───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy:           #0c1436;   /* Nordic Depths */
+  --navy-dark:      #080e26;
+  --navy-light:     #1a2550;
+  --fjord:          #ff9903;   /* Fjord Sun */
+  --fjord-dark:     #d97f00;
+  --fjord-faint:    rgba(255,153,3,0.08);
+  --berry:          #ff375b;   /* Wild Berry */
+  --berry-faint:    rgba(255,55,91,0.08);
+  --lavender:       #dbacf5;   /* Lavender Frost */
+  --lavender-dark:  #7b2cbf;
+  --lavender-faint: rgba(219,172,245,0.12);
+  --pine:           #005c4d;   /* Pine Shadow */
+  --pine-faint:     rgba(0,92,77,0.08);
+  --bg:             #fff3eb;   /* Arctic Haze */
+  --surface:        #FFFFFF;
+  --surface-2:      #fdf9f5;
+  --border:         #ede8e2;
+  --border-md:      #d9d2c8;
+  --text:           #0c1436;
+  --subtext:        #4a4060;
+  --muted:          #9e95a8;
+  --radius:         6px;
+  --radius-lg:      10px;
+  --font:           'Poppins', system-ui, sans-serif;
+}
+html, body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.45;
+  height: 100%;
+}
+
+/* ─────────────────────────────────────────
+   HEADER
+───────────────────────────────────────── */
+.header {
+  background: var(--navy);
+  padding: 9px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.logo { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.logo-mark {
+  width: 26px; height: 26px;
+  background: var(--fjord);
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.logo-text { color: #fff; font-size: 12.5px; font-weight: 700; line-height: 1.1; white-space: nowrap; }
+.logo-text small { display: block; font-size: 10px; font-weight: 400; color: rgba(255,255,255,0.5); }
+.call-pill {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 600; color: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.07);
+  padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+  transition: all 0.3s;
+}
+.call-pill.live   { color: #fff; background: rgba(0,92,77,0.30); }
+.call-pill.ended  { color: rgba(255,255,255,0.35); }
+.dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--muted); flex-shrink: 0; transition: background 0.3s;
+}
+.call-pill.live .dot {
+  background: #00c9a7;
+  box-shadow: 0 0 0 3px rgba(0,92,77,0.35);
+  animation: pulse 1.8s infinite;
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 3px rgba(0,92,77,0.35); }
+  50%      { box-shadow: 0 0 0 5px rgba(0,92,77,0.10); }
+}
+.demo-btn {
+  font-family: var(--font); font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 5px 10px; border-radius: 4px;
+  border: 1.5px solid rgba(255,153,3,0.45);
+  background: transparent; color: var(--fjord);
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.demo-btn:hover  { background: rgba(255,153,3,0.12); border-color: var(--fjord); }
+.demo-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ─────────────────────────────────────────
+   AUTH BANNER
+───────────────────────────────────────── */
+.auth-banner {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 14px;
+  background: rgba(255,153,3,0.08);
+  border-bottom: 1px solid rgba(255,153,3,0.25);
+  font-size: 11.5px; color: var(--subtext);
+}
+.auth-banner.hidden { display: none; }
+.auth-banner b { color: var(--text); }
+.auth-input {
+  flex: 1; min-width: 160px;
+  font-family: var(--font); font-size: 11px;
+  padding: 5px 8px; border: 1.5px solid var(--border-md);
+  border-radius: 4px; outline: none; background: var(--surface);
+}
+.auth-input:focus { border-color: var(--fjord); }
+.auth-save {
+  font-family: var(--font); font-size: 11px; font-weight: 600;
+  padding: 5px 12px; border: none; border-radius: 4px;
+  background: var(--navy); color: #fff; cursor: pointer; white-space: nowrap;
+}
+.auth-save:hover { background: var(--navy-light); }
+
+/* ─────────────────────────────────────────
+   CALLER CONTEXT STRIP
+───────────────────────────────────────── */
+.caller-strip {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 14px;
+  display: flex; align-items: center; gap: 12px;
+  min-height: 44px; flex-shrink: 0;
+}
+.caller-strip.hidden { display: none; }
+.caller-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--navy); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.caller-name { font-size: 12.5px; font-weight: 600; color: var(--text); }
+.caller-sub  { font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+.caller-history-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.history-pill {
+  font-size: 10px; font-weight: 600; padding: 3px 9px;
+  border-radius: 10px; background: var(--lavender-faint);
+  border: 1px solid rgba(219,172,245,0.35); color: var(--lavender-dark);
+  cursor: default; white-space: nowrap;
+}
+.history-pill:hover { background: rgba(219,172,245,0.22); }
+.caller-strip-empty {
+  font-size: 11px; color: var(--muted); font-style: italic;
+}
+
+/* ─────────────────────────────────────────
+   MAIN BODY — two-column grid
+───────────────────────────────────────── */
+.body {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  grid-template-rows: 1fr auto;
+  gap: 0;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ─────────────────────────────────────────
+   LEFT — KNOWLEDGE FEED
+───────────────────────────────────────── */
+.knowledge-col {
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden; min-height: 0;
+}
+.col-header {
+  padding: 7px 14px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface); flex-shrink: 0;
+}
+.col-header.teal-head  { background: var(--navy);  }
+.col-header.navy-head  { background: var(--navy);  }
+.col-header.yellow-head { background: var(--fjord); }
+.col-title {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; flex: 1;
+}
+.col-header.teal-head  .col-title { color: #fff; }
+.col-header.navy-head  .col-title { color: #fff; }
+.col-header.yellow-head .col-title { color: #fff; }
+.col-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 10px; background: rgba(255,255,255,0.18); color: #fff;
+}
+.col-header.yellow-head .col-badge { background: rgba(0,0,0,0.12); color: #fff; }
+
+/* Transcript strip */
+.transcript-bar {
+  padding: 7px 14px;
+  background: rgba(219,172,245,0.04);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; gap: 8px;
+  flex-shrink: 0; min-height: 34px;
+}
+.transcript-tag {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--fjord); white-space: nowrap;
+  padding-top: 1px; flex-shrink: 0;
+}
+.transcript-text {
+  font-size: 11.5px; color: var(--subtext); font-style: italic;
+  line-height: 1.4;
+}
+/* Loading row */
+.loading-row {
+  padding: 10px 14px;
+  display: none; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--muted); flex-shrink: 0;
+}
+.loading-row.visible { display: flex; }
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid var(--border); border-top-color: var(--fjord);
+  border-radius: 50%; animation: spin 0.65s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Knowledge cards */
+.knowledge-feed {
+  flex: 1; overflow-y: auto; padding: 8px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.knowledge-empty {
+  margin: 20px 14px;
+  font-size: 11.5px; color: var(--muted); font-style: italic; text-align: center;
+}
+.k-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  animation: slideIn 0.25s ease;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.k-card-q {
+  padding: 8px 12px 0;
+  display: flex; align-items: flex-start; gap: 7px;
+}
+.k-q-badge {
+  font-size: 9px; font-weight: 800; padding: 2px 5px;
+  background: var(--fjord); color: #fff; border-radius: 3px;
+  flex-shrink: 0; margin-top: 1px; text-transform: uppercase;
+}
+.k-q-text { font-size: 11px; color: var(--subtext); font-weight: 500; line-height: 1.4; }
+.k-card-a {
+  padding: 6px 12px 8px;
+  font-size: 12px; color: var(--text); line-height: 1.55;
+}
+.k-card-links {
+  padding: 0 12px 10px;
+  display: flex; flex-wrap: wrap; gap: 5px;
+}
+.kb-tag {
+  font-size: 10px; font-weight: 600; padding: 2px 9px;
+  border-radius: 10px;
+  background: var(--lavender-faint);
+  border: 1px solid rgba(219,172,245,0.35);
+  color: var(--lavender-dark);
+  cursor: pointer; transition: background 0.12s; text-decoration: none;
+  display: inline-block;
+}
+.kb-tag:hover { background: rgba(219,172,245,0.22); }
+.kb-tag .score { font-weight: 400; opacity: 0.65; margin-left: 3px; }
+
+/* ─────────────────────────────────────────
+   RIGHT — QA COACH
+───────────────────────────────────────── */
+.qa-col {
+  display: flex; flex-direction: column;
+  background: var(--surface); overflow: hidden; min-height: 0;
+}
+.qa-score-bar {
+  padding: 8px 14px;
+  background: var(--navy);
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+.qa-score-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; color: rgba(255,255,255,0.6); flex: 1;
+}
+.qa-score-display {
+  font-size: 18px; font-weight: 800; color: #fff;
+  line-height: 1;
+}
+.qa-score-display span { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.5); }
+.qa-progress-track {
+  height: 4px; flex: 1;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px; overflow: hidden; min-width: 40px;
+}
+.qa-progress-bar {
+  height: 100%; background: var(--fjord);
+  border-radius: 2px; transition: width 0.5s ease;
+  width: 0%;
+}
+/* QA item list */
+.qa-list { flex: 1; overflow-y: auto; }
+.qa-item {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; gap: 10px;
+  transition: background 0.2s;
+}
+.qa-item:last-child { border-bottom: none; }
+.qa-item.detected { background: var(--pine-faint); }
+.qa-item.overdue  { background: var(--berry-faint); }
+.qa-icon {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+  font-size: 11px; font-weight: 700;
+  transition: all 0.3s;
+}
+.qa-icon.pending  { background: #f5ede5; color: var(--muted); border: 1.5px solid var(--border-md); }
+.qa-icon.detected { background: var(--pine); color: #fff; border: none; }
+.qa-icon.overdue  { background: var(--berry); color: #fff; border: none; }
+.qa-body { flex: 1; min-width: 0; }
+.qa-label {
+  font-size: 11.5px; font-weight: 600; color: var(--text);
+  line-height: 1.3; margin-bottom: 2px;
+}
+.qa-item.detected .qa-label { color: #003d33; }
+.qa-item.overdue  .qa-label { color: #991533; }
+.qa-evidence {
+  font-size: 10.5px; color: var(--muted); font-style: italic;
+  line-height: 1.35; display: none;
+}
+.qa-item.detected .qa-evidence { display: block; color: var(--pine); font-style: normal; }
+.qa-item.overdue  .qa-evidence { display: block; color: #cc1a3c; font-style: normal; }
+.qa-section-tag {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted);
+  display: block; margin-bottom: 2px;
+}
+
+/* ─────────────────────────────────────────
+   BOTTOM — SUMMARY FOOTER
+───────────────────────────────────────── */
+.summary-footer {
+  grid-column: 1 / -1;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.summary-header {
+  padding: 6px 14px;
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer; user-select: none;
+  background: var(--fjord);
+}
+.summary-title {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #fff; flex: 1;
+}
+.summary-chevron {
+  color: #fff; opacity: 0.75; transition: transform 0.2s;
+  display: flex; align-items: center;
+}
+.summary-footer.collapsed .summary-chevron { transform: rotate(180deg); }
+.summary-body {
+  padding: 10px 14px 12px;
+  max-height: 160px;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+.summary-footer.collapsed .summary-body { max-height: 0; padding: 0 14px; }
+.summary-text {
+  font-size: 12px; color: var(--text); line-height: 1.6;
+  white-space: pre-wrap;
+}
+.summary-empty { font-size: 11.5px; color: var(--muted); font-style: italic; }
+.summary-actions {
+  display: flex; gap: 8px; margin-top: 10px;
+}
+.summary-actions.hidden { display: none; }
+.sum-btn {
+  font-family: var(--font); font-size: 11px; font-weight: 600;
+  padding: 6px 14px; border-radius: var(--radius); border: none; cursor: pointer; flex: 1;
+  transition: filter 0.15s;
+}
+.sum-btn-save { background: var(--navy); color: #fff; }
+.sum-btn-save:hover { filter: brightness(1.2); }
+.sum-btn-copy { background: var(--bg); color: var(--subtext); border: 1.5px solid var(--border-md); }
+.sum-btn-copy:hover { background: #f5ede5; }
+
+/* ─────────────────────────────────────────
+   PAGE LAYOUT
+───────────────────────────────────────── */
+.page {
+  display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ══ HEADER ══ -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg width="14" height="15" viewBox="0 0 14 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Puzzel P letterform -->
+          <path d="M3 1.5v12M3 1.5h5.5C10.4 1.5 12 3.1 12 5s-1.6 3.5-3.5 3.5H3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="9.5" cy="5" r="1.2" fill="#ff375b"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        VA Co-Pilot
+        <small>Powered by Puzzel</small>
+      </div>
+    </div>
+    <div class="call-pill" id="callPill">
+      <div class="dot"></div>
+      <span id="callPillText">Waiting for call</span>
+    </div>
+    <button class="demo-btn" id="demoBtn" onclick="startDemo()">▶ Demo</button>
+  </div>
+
+  <!-- ══ AUTH BANNER ══ -->
+  <div class="auth-banner hidden" id="authBanner">
+    <b>No Co-Pilot token.</b>&nbsp;Paste your bearer token to enable live responses:
+    <input class="auth-input" id="tokenInput" type="password" placeholder="Bearer token…" />
+    <button class="auth-save" onclick="saveToken()">Save</button>
+  </div>
+
+  <!-- ══ CALLER CONTEXT STRIP ══ -->
+  <div class="caller-strip hidden" id="callerStrip">
+    <div class="caller-avatar" id="callerAvatar">?</div>
+    <div>
+      <div class="caller-name" id="callerName">Unknown caller</div>
+      <div class="caller-sub"  id="callerSub">—</div>
+    </div>
+    <div class="caller-history-pills" id="callerPills"></div>
+  </div>
+
+  <!-- ══ MAIN BODY ══ -->
+  <div class="body" style="flex:1;overflow:hidden;">
+
+    <!-- LEFT — KNOWLEDGE FEED -->
+    <div class="knowledge-col">
+      <div class="col-header teal-head">
+        <div class="col-title">Knowledge Feed</div>
+        <span class="col-badge" id="kBadge">—</span>
+      </div>
+      <div class="transcript-bar">
+        <span class="transcript-tag">Live</span>
+        <span class="transcript-text" id="transcriptText">Waiting for transcript…</span>
+      </div>
+      <div class="loading-row" id="kLoadingRow">
+        <div class="spinner"></div> Searching knowledge base…
+      </div>
+      <div class="knowledge-feed" id="knowledgeFeed">
+        <div class="knowledge-empty" id="kEmpty">
+          Knowledge suggestions will appear here as the conversation progresses.
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT — QA COACH -->
+    <div class="qa-col">
+      <div class="qa-score-bar">
+        <div class="qa-score-label">QA Score</div>
+        <div class="qa-score-display" id="qaScoreDisplay">0 <span>/ 7</span></div>
+        <div class="qa-progress-track">
+          <div class="qa-progress-bar" id="qaProgressBar"></div>
+        </div>
+      </div>
+      <div class="qa-list" id="qaList">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+  </div><!-- /body -->
+
+  <!-- ══ SUMMARY FOOTER ══ -->
+  <div class="summary-footer collapsed" id="summaryFooter">
+    <div class="summary-header" onclick="toggleSummary()">
+      <div class="summary-title">Call Summary</div>
+      <span class="col-badge" id="sBadge" style="background:rgba(255,255,255,0.2);color:#fff;">—</span>
+      <div class="summary-chevron">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+          <path d="M2 8l4-4 4 4" stroke="currentColor" stroke-width="1.5" fill="none"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="summary-body">
+      <div class="summary-empty" id="sEmpty">A rolling summary will build as the call progresses.</div>
+      <div class="summary-text" id="sText" style="display:none;"></div>
+      <div class="summary-actions hidden" id="sActions">
+        <button class="sum-btn sum-btn-copy" onclick="copySummary()">Copy</button>
+        <button class="sum-btn sum-btn-save" onclick="saveSummary()">Save to Record</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   CONFIG — edit before deploying
+═══════════════════════════════════════════════════════════════ */
+var CONFIG = {
+  COPILOT_TOKEN:    '',                         // paste Co-Pilot bearer token
+  COPILOT_BASE:     'https://api.capturi.ai',
+  DEFAULT_QUEUE:    'support',
+  ASR_DEBOUNCE_MS:  2500,                       // pause before KB query fires
+  AGENT_APP_ORIGIN: 'https://agent.puzzel.com'
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   QA CRITERIA
+   phase: 'early'  = flag overdue after 25% of estimated call
+          'mid'    = flag after 55%
+          'late'   = flag after 85%
+═══════════════════════════════════════════════════════════════ */
+var QA_CRITERIA = [
+  {
+    id: 'greeting',
+    section: '1',
+    label: 'Welcome & Introduction',
+    desc: 'Agent greeted the customer and introduced themselves',
+    phase: 'early',
+    keywords: ['thank you for calling', 'thanks for calling', 'good morning', 'good afternoon',
+               'good evening', 'how can i help', 'how may i help', 'my name is', 'this is ',
+               'welcome to'],
+    agentOnly: true
+  },
+  {
+    id: 'tone',
+    section: '2',
+    label: 'Matched Customer Tone',
+    desc: 'Agent adapted tone to match the customer\'s communication style',
+    phase: 'mid',
+    keywords: ['i understand', 'i can see why', 'i completely understand', 'i appreciate',
+               'i hear you', 'that makes sense', 'absolutely', 'of course', 'certainly'],
+    agentOnly: true
+  },
+  {
+    id: 'acknowledge',
+    section: '2',
+    label: 'Acknowledged Reason for Contact',
+    desc: 'Agent clearly acknowledged and confirmed the customer\'s reason for calling',
+    phase: 'early',
+    keywords: ["so you're calling about", "so you're contacting", "you're reaching out",
+               "i understand you need", "you mentioned", "to confirm", "let me just confirm",
+               "so the reason", "you're getting in touch"],
+    agentOnly: true
+  },
+  {
+    id: 'apology',
+    section: '2',
+    label: 'Appropriate Apology',
+    desc: 'Agent apologised when the situation called for it',
+    phase: 'early',
+    keywords: ["i'm sorry", "i am sorry", "i apologise", "i apologize", "sorry to hear",
+               "i sincerely", "i understand your frustration", "i can imagine how"],
+    agentOnly: true
+  },
+  {
+    id: 'solution',
+    section: '3',
+    label: 'Best Solution Offered',
+    desc: 'Agent found and communicated the best resolution for the customer',
+    phase: 'late',
+    keywords: ["i can help you with that", "i'll arrange", "i will arrange", "i'll process",
+               "i will process", "what i can do", "here's what", "i've raised", "i've escalated",
+               "i'll escalate", "i'll update", "i can offer", "i'll send"],
+    agentOnly: true
+  },
+  {
+    id: 'knowledge',
+    section: '4',
+    label: 'Accurate Product Knowledge',
+    desc: 'Agent shared accurate, helpful information about products or policies',
+    phase: 'mid',
+    keywords: ["according to our", "our policy", "the process is", "this means",
+               "what happens is", "you can find", "the way it works", "our system",
+               "the team will", "our sla"],
+    agentOnly: true
+  },
+  {
+    id: 'sla',
+    section: '5–6',
+    label: 'Customer Informed / Next Steps',
+    desc: 'Agent set clear expectations and communicated next steps within SLA',
+    phase: 'late',
+    keywords: ["you'll receive", "you will receive", "you'll get", "i'll follow up",
+               "within 24", "within 48", "by end of", "expect an email", "expect a call",
+               "i'll send you", "you should hear", "i'll call you back", "i'll contact"],
+    agentOnly: true
+  }
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════════ */
+var S = {
+  port:         null,
+  callActive:   false,
+  chatUid:      null,
+  kCount:       0,
+  summaryText:  '',
+  transcriptFull: '',
+  utterances:   [],
+  callMeta: { cli:'', queue:'', requestId:'', agentName:'', agentId:'', callStart:null },
+  qa:           {},     // keyed by criterion id → { status, evidence }
+  asrTimer:     null,
+  sumTimer:     null,
+  demoTimers:   []
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function() {
+  if (!CONFIG.COPILOT_TOKEN) {
+    document.getElementById('authBanner').classList.remove('hidden');
+  }
+  buildQaList();
+  window.addEventListener('message', onPortInit);
+  console.log('[VA Co-Pilot v2] Ready.');
+});
+
+function saveToken() {
+  var v = document.getElementById('tokenInput').value.trim();
+  if (!v) return;
+  CONFIG.COPILOT_TOKEN = v;
+  document.getElementById('authBanner').classList.add('hidden');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   WIDGET API — PORT INIT
+═══════════════════════════════════════════════════════════════ */
+function onPortInit(msg) {
+  if (msg.origin !== CONFIG.AGENT_APP_ORIGIN) return;
+  if (!S.port && msg.ports && msg.ports[0]) {
+    S.port = msg.ports[0];
+    S.port.onmessage = onWidgetMessage;
+    S.port.postMessage({ subscribe: 'requestAccepted' });
+    S.port.postMessage({ subscribe: 'requestConnected' });
+    S.port.postMessage({ subscribe: 'requestEnded' });
+    // ASR — try all known event names; console will reveal which fires
+    S.port.postMessage({ subscribe: 'callAsrTranscription' });
+    S.port.postMessage({ subscribe: 'asrTranscription' });
+    S.port.postMessage({ subscribe: 'transcription' });
+    S.port.postMessage({ subscribe: 'SYSTEM_CALL_ASR_TRANSCRIPTION' });
+    S.port.postMessage({ call: 'agent.userName' });
+    S.port.postMessage({ call: 'agent.userId' });
+    console.log('[VA Co-Pilot v2] Widget API port connected.');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   WIDGET API — MESSAGE HANDLER
+═══════════════════════════════════════════════════════════════ */
+function onWidgetMessage(msg) {
+  var d = msg.data;
+  if (!d) return;
+
+  // Log every incoming event for debugging (identify ASR event name)
+  if (d.type === 'event') console.log('[VA Co-Pilot v2] EVENT:', d.name, d.value);
+
+  if (d.type === 'event') {
+
+    // Call arrived
+    if (d.name === 'requestAccepted' || d.name === 'requestConnected') {
+      var v = d.value || {};
+      S.callMeta.cli       = v.callerNumber || v.ani || v.cli || v.callerNo || '';
+      S.callMeta.queue     = v.queueKey || v.queueName || v.serviceName || v.queue || CONFIG.DEFAULT_QUEUE;
+      S.callMeta.requestId = v.requestId || v.callId || v.id || '';
+      S.callMeta.callStart = new Date();
+      S.callActive = true;
+      setCallPill('live', S.callMeta.cli || 'Call connected');
+      if (S.port) S.port.postMessage({ call: 'call.getRequestInfo' });
+      resetForCall();
+      if (S.callMeta.cli) fetchCallerHistory(S.callMeta.cli);
+      else showCallerStrip({ name: 'Incoming call', sub: 'Caller number unavailable', pills: [] });
+    }
+
+    // Call ended
+    if (d.name === 'requestEnded') {
+      S.callActive = false;
+      setCallPill('ended', 'Call ended');
+      document.getElementById('demoBtn').disabled = false;
+      markOverdueItems();
+      if (S.transcriptFull) fetchSummary(true);
+    }
+
+    // ASR transcription — handle any matching event name
+    var isAsr = ['callAsrTranscription','asrTranscription','transcription','SYSTEM_CALL_ASR_TRANSCRIPTION'].indexOf(d.name) !== -1;
+    if (isAsr && d.value) onTranscription(d.value);
+  }
+
+  if (d.type === 'result') {
+    if (d.name === 'agent.userName') S.callMeta.agentName = d.value || '';
+    if (d.name === 'agent.userId')   S.callMeta.agentId   = d.value || '';
+    if (d.name === 'call.getRequestInfo' && d.value) {
+      var r = d.value;
+      if (!S.callMeta.cli)       S.callMeta.cli       = r.callerNumber || r.ani || r.cli || '';
+      if (!S.callMeta.queue)     S.callMeta.queue     = r.queueName || r.serviceName || CONFIG.DEFAULT_QUEUE;
+      if (!S.callMeta.requestId) S.callMeta.requestId = r.requestId || r.id || '';
+      if (S.callMeta.cli) fetchCallerHistory(S.callMeta.cli);
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ASR HANDLER
+═══════════════════════════════════════════════════════════════ */
+function onTranscription(value) {
+  var text    = value.text || value.transcription || value.utterance || String(value);
+  var speaker = (value.speaker || value.role || value.channel || 'unknown').toLowerCase();
+  if (!text) return;
+
+  // Update live transcript strip
+  var icon = speaker === 'agent' ? '🎧' : '👤';
+  document.getElementById('transcriptText').textContent = icon + ' ' + text;
+
+  // Accumulate
+  S.utterances.push({ speaker: speaker, text: text });
+  S.transcriptFull += '\n' + speaker.toUpperCase() + ': ' + text;
+
+  // Check QA criteria against this utterance
+  checkQaCriteria(text, speaker);
+
+  // Debounce KB query
+  clearTimeout(S.asrTimer);
+  S.asrTimer = setTimeout(function() {
+    queryKnowledge(text);
+    // Request summary update every ~5 utterances
+    if (S.utterances.length > 0 && S.utterances.length % 5 === 0) fetchSummary(false);
+  }, CONFIG.ASR_DEBOUNCE_MS);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   QA ENGINE
+═══════════════════════════════════════════════════════════════ */
+function buildQaList() {
+  // Initialise state
+  QA_CRITERIA.forEach(function(c) {
+    S.qa[c.id] = { status: 'pending', evidence: '' };
+  });
+  renderQaList();
+}
+
+function renderQaList() {
+  var html = '';
+  QA_CRITERIA.forEach(function(c) {
+    var qa = S.qa[c.id];
+    var itemClass = 'qa-item ' + qa.status;
+    var iconContent = qa.status === 'detected' ? '✓' : qa.status === 'overdue' ? '!' : c.section;
+    html += '<div class="' + itemClass + '" id="qa-' + c.id + '">'
+      + '<div class="qa-icon ' + qa.status + '">' + iconContent + '</div>'
+      + '<div class="qa-body">'
+      + '<span class="qa-section-tag">Section ' + c.section + '</span>'
+      + '<div class="qa-label">' + escHtml(c.label) + '</div>'
+      + '<div class="qa-evidence" id="qa-ev-' + c.id + '">'
+      + escHtml(qa.evidence || (qa.status === 'overdue' ? 'Not yet detected — action needed' : ''))
+      + '</div>'
+      + '</div>'
+      + '</div>';
+  });
+  document.getElementById('qaList').innerHTML = html;
+  updateQaScore();
+}
+
+function checkQaCriteria(text, speaker) {
+  var lc = text.toLowerCase();
+  var changed = false;
+
+  QA_CRITERIA.forEach(function(c) {
+    if (S.qa[c.id].status === 'detected') return;       // already done
+    if (c.agentOnly && speaker === 'customer') return;  // skip customer utterances
+
+    var hit = c.keywords.some(function(kw) { return lc.indexOf(kw) !== -1; });
+    if (hit) {
+      S.qa[c.id].status   = 'detected';
+      S.qa[c.id].evidence = truncate(text, 70);
+      changed = true;
+    }
+  });
+
+  if (changed) updateQaItem();
+}
+
+function updateQaItem() {
+  QA_CRITERIA.forEach(function(c) {
+    var qa    = S.qa[c.id];
+    var el    = document.getElementById('qa-' + c.id);
+    var evEl  = document.getElementById('qa-ev-' + c.id);
+    if (!el) return;
+    el.className = 'qa-item ' + qa.status;
+    var icon = el.querySelector('.qa-icon');
+    if (icon) {
+      icon.className = 'qa-icon ' + qa.status;
+      icon.textContent = qa.status === 'detected' ? '✓' : qa.status === 'overdue' ? '!' : c.section;
+    }
+    if (evEl) {
+      evEl.textContent = qa.evidence || (qa.status === 'overdue' ? 'Not yet detected — action needed' : '');
+    }
+  });
+  updateQaScore();
+}
+
+function markOverdueItems() {
+  var changed = false;
+  QA_CRITERIA.forEach(function(c) {
+    if (S.qa[c.id].status === 'pending') {
+      S.qa[c.id].status = 'overdue';
+      changed = true;
+    }
+  });
+  if (changed) updateQaItem();
+}
+
+function checkPhaseOverdue() {
+  // Called periodically during demo to flag items as overdue based on call progress
+  if (!S.callMeta.callStart || !S.callActive) return;
+  var elapsed = (new Date() - S.callMeta.callStart) / 1000; // seconds
+  // For demo: call is ~45s. Phases: early=0-15s, mid=15-30s, late=30-45s
+  var totalEstimate = 45;
+  var pct = elapsed / totalEstimate;
+  var changed = false;
+  QA_CRITERIA.forEach(function(c) {
+    if (S.qa[c.id].status !== 'pending') return;
+    var threshold = c.phase === 'early' ? 0.35 : c.phase === 'mid' ? 0.65 : 0.90;
+    if (pct > threshold) {
+      S.qa[c.id].status = 'overdue';
+      changed = true;
+    }
+  });
+  if (changed) updateQaItem();
+}
+
+function updateQaScore() {
+  var detected = QA_CRITERIA.filter(function(c) { return S.qa[c.id].status === 'detected'; }).length;
+  var total    = QA_CRITERIA.length;
+  document.getElementById('qaScoreDisplay').innerHTML = detected + ' <span>/ ' + total + '</span>';
+  document.getElementById('qaProgressBar').style.width = Math.round((detected / total) * 100) + '%';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CO-PILOT API — KNOWLEDGE
+═══════════════════════════════════════════════════════════════ */
+function queryKnowledge(utterance) {
+  if (!utterance || !utterance.trim()) return;
+  document.getElementById('kLoadingRow').classList.add('visible');
+
+  if (!CONFIG.COPILOT_TOKEN) {
+    var demo = getDemoKnowledge(utterance);
+    setTimeout(function() {
+      document.getElementById('kLoadingRow').classList.remove('visible');
+      if (demo) renderKnowledgeCard(utterance, demo);
+    }, 550);
+    return;
+  }
+
+  var payload = { question: utterance };
+  if (S.chatUid) payload.uid = S.chatUid;
+
+  fetch(CONFIG.COPILOT_BASE + '/co-pilot/v1/chats/ask', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + CONFIG.COPILOT_TOKEN, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(function(data) {
+    if (data.uid) S.chatUid = data.uid;
+    var ans = data.answers && data.answers[0];
+    document.getElementById('kLoadingRow').classList.remove('visible');
+    if (ans && ans.reply) renderKnowledgeCard(utterance, ans);
+  })
+  .catch(function(e) {
+    console.error('[VA Co-Pilot v2] Knowledge error:', e);
+    document.getElementById('kLoadingRow').classList.remove('visible');
+  });
+}
+
+function renderKnowledgeCard(question, answer) {
+  S.kCount++;
+  document.getElementById('kBadge').textContent = S.kCount;
+  document.getElementById('kEmpty').style.display = 'none';
+
+  var linksHtml = '';
+  if (answer.links && answer.links.length) {
+    linksHtml = '<div class="k-card-links">';
+    answer.links.slice(0, 3).forEach(function(l) {
+      var scoreStr = l.score ? ' <span class="score">(' + Math.round(l.score * 100) + '%)</span>' : '';
+      linksHtml += '<a class="kb-tag" href="' + escHtml(l.url || '#') + '" target="_blank">'
+        + escHtml(l.title || 'KB Article') + scoreStr + '</a>';
+    });
+    linksHtml += '</div>';
+  }
+
+  var card = document.createElement('div');
+  card.className = 'k-card';
+  card.innerHTML = '<div class="k-card-q"><span class="k-q-badge">Q</span>'
+    + '<span class="k-q-text">' + escHtml(question) + '</span></div>'
+    + '<div class="k-card-a">' + escHtml(answer.reply) + '</div>'
+    + linksHtml;
+
+  var feed = document.getElementById('knowledgeFeed');
+  feed.insertBefore(card, feed.firstChild);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CO-PILOT API — SUMMARY
+═══════════════════════════════════════════════════════════════ */
+function fetchSummary(isFinal) {
+  if (!S.transcriptFull.trim()) return;
+
+  if (!CONFIG.COPILOT_TOKEN) {
+    setTimeout(function() {
+      renderSummary(DEMO_DATA.getSummary(S.utterances.length), isFinal);
+    }, 400);
+    return;
+  }
+
+  fetch(CONFIG.COPILOT_BASE + '/co-pilot/v1/summaries/summarise', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + CONFIG.COPILOT_TOKEN, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ queue: S.callMeta.queue || CONFIG.DEFAULT_QUEUE, transcription: S.transcriptFull })
+  })
+  .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(function(data) { if (data.summary) renderSummary(data.summary, isFinal); })
+  .catch(function(e) { console.error('[VA Co-Pilot v2] Summary error:', e); });
+}
+
+function renderSummary(text, isFinal) {
+  S.summaryText = text;
+  var footer = document.getElementById('summaryFooter');
+  // Auto-expand footer when summary first appears
+  footer.classList.remove('collapsed');
+  document.getElementById('sEmpty').style.display = 'none';
+  var el = document.getElementById('sText');
+  el.textContent = text;
+  el.style.display = 'block';
+  document.getElementById('sBadge').textContent = isFinal ? '✓' : '↻';
+  if (isFinal) document.getElementById('sActions').classList.remove('hidden');
+}
+
+function saveSummary() {
+  if (!S.summaryText || !S.callMeta.requestId || !CONFIG.COPILOT_TOKEN) return;
+  fetch(CONFIG.COPILOT_BASE + '/co-pilot/v1/summaries', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + CONFIG.COPILOT_TOKEN, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ puzzelSessionUid: S.callMeta.requestId, text: S.summaryText })
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error(r.status);
+    var btn = document.querySelector('.sum-btn-save');
+    btn.textContent = '✓ Saved';
+    setTimeout(function() { btn.textContent = 'Save to Record'; }, 2000);
+  })
+  .catch(function(e) { console.error('[VA Co-Pilot v2] Save summary error:', e); });
+}
+
+function copySummary() {
+  if (!S.summaryText) return;
+  navigator.clipboard.writeText(S.summaryText).then(function() {
+    var btn = document.querySelector('.sum-btn-copy');
+    btn.textContent = '✓ Copied';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CO-PILOT API — CALLER HISTORY
+═══════════════════════════════════════════════════════════════ */
+function fetchCallerHistory(phone) {
+  if (!CONFIG.COPILOT_TOKEN) {
+    setTimeout(function() { renderCallerHistory(DEMO_DATA.interactions, phone); }, 300);
+    return;
+  }
+  var url = CONFIG.COPILOT_BASE + '/co-pilot/v1/previous-interactions/conversations?customers[]=' + encodeURIComponent(phone);
+  fetch(url, { headers: { 'Authorization': 'Bearer ' + CONFIG.COPILOT_TOKEN } })
+  .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(function(data) { renderCallerHistory(data, phone); })
+  .catch(function(e) {
+    console.error('[VA Co-Pilot v2] History error:', e);
+    showCallerStrip({ name: 'Caller history unavailable', sub: phone, pills: [] });
+  });
+}
+
+function renderCallerHistory(interactions, phone) {
+  if (!interactions || !interactions.length) {
+    showCallerStrip({ name: 'New caller', sub: phone || 'Unknown number', pills: [] });
+    return;
+  }
+  var first = interactions[0];
+  var name  = (first.user && first.user.name) ? first.user.name : 'Unknown caller';
+  var pills = interactions.slice(0, 4).map(function(item) {
+    var topic = (item.aiInsights && item.aiInsights.keyTopic) ? item.aiInsights.keyTopic : 'Call';
+    var date  = item.dateTime ? formatShortDate(item.dateTime) : '';
+    return '<div class="history-pill" title="' + escHtml(
+      (item.aiInsights && item.aiInsights.customSummary) ? item.aiInsights.customSummary : topic
+    ) + '">' + escHtml(topic) + (date ? ' · ' + date : '') + '</div>';
+  }).join('');
+
+  showCallerStrip({
+    name:    name,
+    sub:     phone + ' · ' + interactions.length + ' previous ' + (interactions.length === 1 ? 'call' : 'calls'),
+    pills:   pills,
+    initials: getInitials(name)
+  });
+}
+
+function showCallerStrip(opts) {
+  document.getElementById('callerStrip').classList.remove('hidden');
+  document.getElementById('callerAvatar').textContent = opts.initials || opts.name.charAt(0).toUpperCase();
+  document.getElementById('callerName').textContent   = opts.name;
+  document.getElementById('callerSub').textContent    = opts.sub;
+  document.getElementById('callerPills').innerHTML    = opts.pills || '';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UI HELPERS
+═══════════════════════════════════════════════════════════════ */
+function setCallPill(type, text) {
+  var el = document.getElementById('callPill');
+  el.className = 'call-pill ' + (type || '');
+  document.getElementById('callPillText').textContent = text;
+}
+
+function toggleSummary() {
+  document.getElementById('summaryFooter').classList.toggle('collapsed');
+}
+
+function resetForCall() {
+  S.utterances   = [];
+  S.transcriptFull = '';
+  S.kCount       = 0;
+  S.chatUid      = null;
+  S.summaryText  = '';
+  document.getElementById('kBadge').textContent        = '—';
+  document.getElementById('transcriptText').textContent = 'Waiting for transcript…';
+  document.getElementById('kLoadingRow').classList.remove('visible');
+  document.getElementById('knowledgeFeed').innerHTML   = '<div class="knowledge-empty" id="kEmpty">Knowledge suggestions will appear here as the conversation progresses.</div>';
+  document.getElementById('sBadge').textContent        = '—';
+  document.getElementById('sEmpty').style.display      = 'block';
+  document.getElementById('sText').style.display       = 'none';
+  document.getElementById('sText').textContent         = '';
+  document.getElementById('sActions').classList.add('hidden');
+  document.getElementById('summaryFooter').classList.add('collapsed');
+  document.getElementById('callerStrip').classList.add('hidden');
+  // Reset QA
+  QA_CRITERIA.forEach(function(c) { S.qa[c.id] = { status: 'pending', evidence: '' }; });
+  renderQaList();
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function truncate(s, n) { return s.length > n ? s.slice(0, n) + '…' : s; }
+function getInitials(name) {
+  return name.split(' ').filter(Boolean).map(function(w) { return w[0]; }).join('').slice(0,2).toUpperCase() || '?';
+}
+function formatShortDate(dt) {
+  try {
+    var d = new Date(dt);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  } catch(e) { return ''; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DEMO DATA & SCRIPTED SCENARIO
+   Scenario: Broadband outage call — ISP customer service
+   Covers all 7 QA criteria through realistic agent dialogue
+═══════════════════════════════════════════════════════════════ */
+var DEMO_DATA = {
+  cli: '+44 7700 900 312',
+  queue: 'broadband-support',
+
+  interactions: [
+    {
+      uid: 'd1',
+      dateTime: new Date(Date.now() - 21 * 86400000).toISOString(),
+      duration: 384,
+      user: { name: 'Claire Holloway', email: '' },
+      aiInsights: {
+        keyTopic: 'Broadband setup',
+        keySubTopic: 'Router configuration',
+        customSummary: 'Customer called on initial setup. Agent walked through router configuration and confirmed broadband was active. Resolved on first call.'
+      }
+    },
+    {
+      uid: 'd2',
+      dateTime: new Date(Date.now() - 65 * 86400000).toISOString(),
+      duration: 210,
+      user: { name: 'Claire Holloway', email: '' },
+      aiInsights: {
+        keyTopic: 'Billing',
+        keySubTopic: 'Upgrade query',
+        customSummary: 'Customer enquired about upgrading to fibre package. Agent explained pricing and availability. Customer decided to remain on current plan.'
+      }
+    }
+  ],
+
+  // Scripted transcript — each line designed to trigger a QA criterion
+  // speaker: 'agent' | 'customer'
+  transcript: [
+    { delay: 1200,  speaker: 'agent',    text: "Good afternoon, thank you for calling Connex Support, this is Jordan speaking. How can I help you today?" },
+    // ↑ QA 1: Greeting ✓
+
+    { delay: 6000,  speaker: 'customer', text: "Hi Jordan, I'm really frustrated — my broadband has been completely down for nearly two days and I have no idea why." },
+
+    { delay: 10500, speaker: 'agent',    text: "I'm really sorry to hear that. Two days without internet is absolutely unacceptable, and I completely understand how frustrating that must be, especially if you're working from home." },
+    // ↑ QA 2: Tone matching ✓  QA 4: Apology ✓
+
+    { delay: 16000, speaker: 'customer', text: "Yeah, it just dropped Tuesday morning and nothing since. I've tried restarting the router multiple times." },
+
+    { delay: 20500, speaker: 'agent',    text: "Understood. So you're contacting us because your broadband service went down on Tuesday and hasn't come back despite restarting the router — let me pull up your account and look into this straight away." },
+    // ↑ QA 3: Acknowledge reason ✓
+
+    { delay: 27000, speaker: 'agent',    text: "I can see there is a known network fault affecting your exchange. Our engineers are actively working on a fix. The way it works is that when a fault of this type is raised, our SLA requires resolution within 24 hours — and we're within that window now." },
+    // ↑ QA 6: Product knowledge ✓
+
+    { delay: 33500, speaker: 'customer', text: "That's good to know. Is there anything you can actually do to speed it up?" },
+
+    { delay: 37500, speaker: 'agent',    text: "Absolutely — I'll escalate your case to priority right now, which puts you to the front of the fault queue. I'm also raising a service credit on your account for the disruption. Our policy covers one day's charge for every 24 hours of unplanned outage." },
+    // ↑ QA 5: Best solution ✓  (also reinforces QA 6: product knowledge)
+
+    { delay: 44500, speaker: 'customer', text: "OK, and will I get any updates? I've had nothing through at all." },
+
+    { delay: 48500, speaker: 'agent',    text: "Yes, absolutely. You'll receive an SMS and email as soon as the fault is resolved. And if it's not fixed within the next four hours, I'll personally call you back. I'm also noting everything on your account now." }
+    // ↑ QA 7: Customer informed / next steps ✓
+  ],
+
+  knowledgeAnswers: {
+    'broadband': {
+      reply: "For a broadband outage, first check the Connex service status page for area faults. If a network fault is confirmed, log the fault reference number and inform the customer of the ETA. If no fault is showing, run a line test from the admin portal under Diagnostics → Line Test.",
+      links: [
+        { title: 'Broadband Fault Handling Guide', url: '#', score: 0.95 },
+        { title: 'Line Test — Admin Portal', url: '#', score: 0.88 }
+      ]
+    },
+    'router': {
+      reply: "Ask the customer to perform a full power cycle: unplug the router for 60 seconds, then reconnect. If the issue persists, check the router sync light — a flashing red/amber indicates a line fault rather than a device fault. Log a fault report if the line is confirmed down.",
+      links: [
+        { title: 'Router Troubleshooting Steps', url: '#', score: 0.92 },
+        { title: 'Sync Light Indicator Guide', url: '#', score: 0.81 }
+      ]
+    },
+    'escalate': {
+      reply: "Priority escalations can be raised via the fault management system under Escalations → Priority Request. Include the fault reference, customer account number, and business impact. Priority faults are reviewed within 2 hours and trigger a dedicated engineering resource.",
+      links: [
+        { title: 'Priority Escalation Process', url: '#', score: 0.96 },
+        { title: 'Fault Management System — User Guide', url: '#', score: 0.84 }
+      ]
+    },
+    'credit': {
+      reply: "Service credits are calculated as 1/30th of the monthly broadband charge per full day of unplanned downtime. Credits are applied automatically after the fault is closed and appear on the next billing cycle. Notify the customer and add a note to the account timeline.",
+      links: [
+        { title: 'Service Credit Policy', url: '#', score: 0.97 },
+        { title: 'Applying Credits — Account Management', url: '#', score: 0.83 }
+      ]
+    },
+    'update': {
+      reply: "Customers are automatically notified by SMS and email when a reported fault is resolved. To manually send an interim update, use the Account Portal → Communications → Send Service Update. Set a call-back task if you've committed to following up personally.",
+      links: [
+        { title: 'Customer Communications During Faults', url: '#', score: 0.91 }
+      ]
+    }
+  },
+
+  getSummary: function(uttCount) {
+    if (uttCount < 3) return "Customer contacting about a broadband outage that has been ongoing since Tuesday morning.";
+    if (uttCount < 7) return "Customer (Claire Holloway) reporting broadband outage since Tuesday. Network fault confirmed on exchange. Agent apologised and acknowledged the issue. Priority escalation in progress.";
+    return "Customer (Claire Holloway) — broadband down since Tuesday morning, router restarts unsuccessful.\n\nCause: Known network fault at local exchange. ETA: within 24hr SLA window.\n\nActions taken:\n• Priority escalation raised\n• Service credit applied (1/30th daily rate per outage day)\n• SMS and email notification scheduled for fault resolution\n• Agent call-back committed if not resolved within 4 hours\n\nOutcome: Pending fault resolution.";
+  }
+};
+
+function getDemoKnowledge(text) {
+  var t = text.toLowerCase();
+  if (t.indexOf('broadband') !== -1 || t.indexOf('down') !== -1 || t.indexOf('outage') !== -1 || t.indexOf('network fault') !== -1) return DEMO_DATA.knowledgeAnswers.broadband;
+  if (t.indexOf('router') !== -1 || t.indexOf('restart') !== -1)                                                                      return DEMO_DATA.knowledgeAnswers.router;
+  if (t.indexOf('escalat') !== -1 || t.indexOf('priority') !== -1 || t.indexOf('speed') !== -1)                                       return DEMO_DATA.knowledgeAnswers.escalate;
+  if (t.indexOf('credit') !== -1 || t.indexOf('disruption') !== -1 || t.indexOf('charge') !== -1)                                     return DEMO_DATA.knowledgeAnswers.credit;
+  if (t.indexOf('update') !== -1 || t.indexOf('notif') !== -1 || t.indexOf('sms') !== -1 || t.indexOf('email') !== -1)                return DEMO_DATA.knowledgeAnswers.update;
+  return null;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DEMO MODE
+═══════════════════════════════════════════════════════════════ */
+var phaseTimer = null;
+
+function startDemo() {
+  if (phaseTimer) return;
+  document.getElementById('demoBtn').disabled = true;
+
+  // Simulate call arriving
+  S.callActive           = true;
+  S.callMeta.cli         = DEMO_DATA.cli;
+  S.callMeta.queue       = DEMO_DATA.queue;
+  S.callMeta.requestId   = 'demo-' + Date.now();
+  S.callMeta.callStart   = new Date();
+
+  setCallPill('live', DEMO_DATA.cli);
+  resetForCall();
+  fetchCallerHistory(DEMO_DATA.cli);
+
+  // Phase overdue checker — runs every 5s during demo
+  phaseTimer = setInterval(checkPhaseOverdue, 5000);
+
+  // Fire scripted utterances
+  DEMO_DATA.transcript.forEach(function(utt) {
+    var t = setTimeout(function() {
+      onTranscription({ text: utt.text, speaker: utt.speaker });
+    }, utt.delay);
+    S.demoTimers.push(t);
+  });
+
+  // End call after last utterance + 4s
+  var endDelay = DEMO_DATA.transcript[DEMO_DATA.transcript.length - 1].delay + 4000;
+  var endTimer = setTimeout(function() {
+    clearInterval(phaseTimer);
+    phaseTimer = null;
+    S.callActive = false;
+    setCallPill('ended', 'Demo complete');
+    document.getElementById('demoBtn').disabled = false;
+    markOverdueItems();
+    fetchSummary(true);
+  }, endDelay);
+  S.demoTimers.push(endTimer);
+}
+</script>
+</body>
+</html>
